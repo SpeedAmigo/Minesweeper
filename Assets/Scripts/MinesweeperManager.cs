@@ -10,8 +10,8 @@ public class MinesweeperManager : MonoBehaviour
     
     public static event Action OnRestartEvent;
     public static event Action<int> OnBombCountEvent;
-
     public static event Action OnTileUncoverEvent;
+    public static event Action OnGameWonEvent;
     
     [Header("Dependencies")]
     [SerializeField] private Transform tilePrefab;
@@ -178,6 +178,12 @@ public class MinesweeperManager : MonoBehaviour
         timer.StopTimer();
         OnTileUncoverEvent?.Invoke();   
     }
+
+    private void GameWon()
+    {
+        timer.StopTimer();
+        OnGameWonEvent?.Invoke();
+    }
     
     private void PlaceMines(int mineCount, HashSet<Vector2Int> safeArea)
     {
@@ -259,8 +265,7 @@ public class MinesweeperManager : MonoBehaviour
 
         if (stateCheck)
         {
-            Debug.Log("Game Won!");
-            timer.StopTimer();
+            GameWon();
         }
     }
 }

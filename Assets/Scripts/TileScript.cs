@@ -60,7 +60,6 @@ public class TileScript : MonoBehaviour
             if (isMine)
             {
                 MinesweeperManager.Instance.GameOver();
-                Debug.Log("Game Over");
                 _spriteRenderer.sprite = mineHitTile;
             }
             else
@@ -77,7 +76,7 @@ public class TileScript : MonoBehaviour
         }
     }
 
-    public void UncoverTile()
+    private void UncoverTile()
     {
         if (!active) return;
         
