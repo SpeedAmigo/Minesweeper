@@ -77,6 +77,14 @@ public class TileScript : MonoBehaviour
         }
     }
 
+    public void UncoverTile()
+    {
+        if (!active) return;
+        
+        active = false;
+        _spriteRenderer.sprite = isMine ? mineTile : clickedTiles[mineCount];
+    }
+
     private void ResetTile()
     {
         active = true;
@@ -95,10 +103,12 @@ public class TileScript : MonoBehaviour
     private void OnEnable()
     {
         MinesweeperManager.OnRestartEvent += ResetTile;
+        MinesweeperManager.OnTileUncoverEvent += UncoverTile;
     }
 
     private void OnDisable()
     {
         MinesweeperManager.OnRestartEvent -= ResetTile;
+        MinesweeperManager.OnTileUncoverEvent -= UncoverTile;
     }
 }

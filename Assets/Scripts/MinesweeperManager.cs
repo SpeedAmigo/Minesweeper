@@ -10,6 +10,8 @@ public class MinesweeperManager : MonoBehaviour
     
     public static event Action OnRestartEvent;
     public static event Action<int> OnBombCountEvent;
+
+    public static event Action OnTileUncoverEvent;
     
     [Header("Dependencies")]
     [SerializeField] private Transform tilePrefab;
@@ -174,6 +176,7 @@ public class MinesweeperManager : MonoBehaviour
     public void GameOver()
     {
         timer.StopTimer();
+        OnTileUncoverEvent?.Invoke();   
     }
     
     private void PlaceMines(int mineCount, HashSet<Vector2Int> safeArea)
