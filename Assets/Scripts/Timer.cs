@@ -39,6 +39,11 @@ public class Timer : MonoBehaviour
         timerText.text = "00:00";
     }
 
+    public float GetElapsedTime()
+    {
+        return elapsedTime;
+    }
+
     private void Start()
     {
         isTimerActive = false;

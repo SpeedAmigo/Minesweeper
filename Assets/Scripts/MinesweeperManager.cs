@@ -179,9 +179,17 @@ public class MinesweeperManager : MonoBehaviour
         OnTileUncoverEvent?.Invoke();   
     }
 
+    [ContextMenu("Win Game")]
     private void GameWon()
     {
         timer.StopTimer();
+
+        float trimmedTime = timer.GetElapsedTime();
+        trimmedTime = Mathf.Round(trimmedTime * 1000f) / 1000f;
+        
+        StatisticManager.Instance.UpdateDayStreak();
+        StatisticManager.Instance.SetQuickestTime(trimmedTime);
+        
         OnGameWonEvent?.Invoke();
     }
     
