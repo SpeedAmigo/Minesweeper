@@ -172,6 +172,33 @@ public partial class @InputSystem_Actions: IInputActionCollection2, IDisposable
                     ""processors"": """",
                     ""interactions"": """",
                     ""initialStateCheck"": false
+                },
+                {
+                    ""name"": ""ScopeUp"",
+                    ""type"": ""Value"",
+                    ""id"": ""16595b27-b26d-4983-98ae-1c5a03ce5104"",
+                    ""expectedControlType"": ""Axis"",
+                    ""processors"": """",
+                    ""interactions"": """",
+                    ""initialStateCheck"": true
+                },
+                {
+                    ""name"": ""ScopeDown"",
+                    ""type"": ""Value"",
+                    ""id"": ""9c797394-2953-4874-afb2-9fc19e86c239"",
+                    ""expectedControlType"": ""Axis"",
+                    ""processors"": """",
+                    ""interactions"": """",
+                    ""initialStateCheck"": true
+                },
+                {
+                    ""name"": ""ScrollAction"",
+                    ""type"": ""Value"",
+                    ""id"": ""afd02a9d-1846-4760-9bbb-697f0d416103"",
+                    ""expectedControlType"": ""Vector2"",
+                    ""processors"": """",
+                    ""interactions"": """",
+                    ""initialStateCheck"": true
                 }
             ],
             ""bindings"": [
@@ -513,6 +540,39 @@ public partial class @InputSystem_Actions: IInputActionCollection2, IDisposable
                     ""processors"": """",
                     ""groups"": ""Keyboard&Mouse"",
                     ""action"": ""Crouch"",
+                    ""isComposite"": false,
+                    ""isPartOfComposite"": false
+                },
+                {
+                    ""name"": """",
+                    ""id"": ""3b85c228-74e9-4daf-aecd-fa73d9858334"",
+                    ""path"": ""<Mouse>/scroll/up"",
+                    ""interactions"": """",
+                    ""processors"": """",
+                    ""groups"": """",
+                    ""action"": ""ScopeUp"",
+                    ""isComposite"": false,
+                    ""isPartOfComposite"": false
+                },
+                {
+                    ""name"": """",
+                    ""id"": ""1ccc5a0e-badb-4327-80de-4eabcbdfc20c"",
+                    ""path"": ""<Mouse>/scroll/down"",
+                    ""interactions"": """",
+                    ""processors"": """",
+                    ""groups"": """",
+                    ""action"": ""ScopeDown"",
+                    ""isComposite"": false,
+                    ""isPartOfComposite"": false
+                },
+                {
+                    ""name"": """",
+                    ""id"": ""e642b1b5-9c32-4441-ba2c-619e015854b2"",
+                    ""path"": ""<Mouse>/scroll"",
+                    ""interactions"": """",
+                    ""processors"": """",
+                    ""groups"": """",
+                    ""action"": ""ScrollAction"",
                     ""isComposite"": false,
                     ""isPartOfComposite"": false
                 }
@@ -1109,6 +1169,9 @@ public partial class @InputSystem_Actions: IInputActionCollection2, IDisposable
         m_Player_Previous = m_Player.FindAction("Previous", throwIfNotFound: true);
         m_Player_Next = m_Player.FindAction("Next", throwIfNotFound: true);
         m_Player_Sprint = m_Player.FindAction("Sprint", throwIfNotFound: true);
+        m_Player_ScopeUp = m_Player.FindAction("ScopeUp", throwIfNotFound: true);
+        m_Player_ScopeDown = m_Player.FindAction("ScopeDown", throwIfNotFound: true);
+        m_Player_ScrollAction = m_Player.FindAction("ScrollAction", throwIfNotFound: true);
         // UI
         m_UI = asset.FindActionMap("UI", throwIfNotFound: true);
         m_UI_Navigate = m_UI.FindAction("Navigate", throwIfNotFound: true);
@@ -1211,6 +1274,9 @@ public partial class @InputSystem_Actions: IInputActionCollection2, IDisposable
     private readonly InputAction m_Player_Previous;
     private readonly InputAction m_Player_Next;
     private readonly InputAction m_Player_Sprint;
+    private readonly InputAction m_Player_ScopeUp;
+    private readonly InputAction m_Player_ScopeDown;
+    private readonly InputAction m_Player_ScrollAction;
     /// <summary>
     /// Provides access to input actions defined in input action map "Player".
     /// </summary>
@@ -1258,6 +1324,18 @@ public partial class @InputSystem_Actions: IInputActionCollection2, IDisposable
         /// Provides access to the underlying input action "Player/Sprint".
         /// </summary>
         public InputAction @Sprint => m_Wrapper.m_Player_Sprint;
+        /// <summary>
+        /// Provides access to the underlying input action "Player/ScopeUp".
+        /// </summary>
+        public InputAction @ScopeUp => m_Wrapper.m_Player_ScopeUp;
+        /// <summary>
+        /// Provides access to the underlying input action "Player/ScopeDown".
+        /// </summary>
+        public InputAction @ScopeDown => m_Wrapper.m_Player_ScopeDown;
+        /// <summary>
+        /// Provides access to the underlying input action "Player/ScrollAction".
+        /// </summary>
+        public InputAction @ScrollAction => m_Wrapper.m_Player_ScrollAction;
         /// <summary>
         /// Provides access to the underlying input action map instance.
         /// </summary>
@@ -1311,6 +1389,15 @@ public partial class @InputSystem_Actions: IInputActionCollection2, IDisposable
             @Sprint.started += instance.OnSprint;
             @Sprint.performed += instance.OnSprint;
             @Sprint.canceled += instance.OnSprint;
+            @ScopeUp.started += instance.OnScopeUp;
+            @ScopeUp.performed += instance.OnScopeUp;
+            @ScopeUp.canceled += instance.OnScopeUp;
+            @ScopeDown.started += instance.OnScopeDown;
+            @ScopeDown.performed += instance.OnScopeDown;
+            @ScopeDown.canceled += instance.OnScopeDown;
+            @ScrollAction.started += instance.OnScrollAction;
+            @ScrollAction.performed += instance.OnScrollAction;
+            @ScrollAction.canceled += instance.OnScrollAction;
         }
 
         /// <summary>
@@ -1349,6 +1436,15 @@ public partial class @InputSystem_Actions: IInputActionCollection2, IDisposable
             @Sprint.started -= instance.OnSprint;
             @Sprint.performed -= instance.OnSprint;
             @Sprint.canceled -= instance.OnSprint;
+            @ScopeUp.started -= instance.OnScopeUp;
+            @ScopeUp.performed -= instance.OnScopeUp;
+            @ScopeUp.canceled -= instance.OnScopeUp;
+            @ScopeDown.started -= instance.OnScopeDown;
+            @ScopeDown.performed -= instance.OnScopeDown;
+            @ScopeDown.canceled -= instance.OnScopeDown;
+            @ScrollAction.started -= instance.OnScrollAction;
+            @ScrollAction.performed -= instance.OnScrollAction;
+            @ScrollAction.canceled -= instance.OnScrollAction;
         }
 
         /// <summary>
@@ -1712,6 +1808,27 @@ public partial class @InputSystem_Actions: IInputActionCollection2, IDisposable
         /// <seealso cref="UnityEngine.InputSystem.InputAction.performed" />
         /// <seealso cref="UnityEngine.InputSystem.InputAction.canceled" />
         void OnSprint(InputAction.CallbackContext context);
+        /// <summary>
+        /// Method invoked when associated input action "ScopeUp" is either <see cref="UnityEngine.InputSystem.InputAction.started" />, <see cref="UnityEngine.InputSystem.InputAction.performed" /> or <see cref="UnityEngine.InputSystem.InputAction.canceled" />.
+        /// </summary>
+        /// <seealso cref="UnityEngine.InputSystem.InputAction.started" />
+        /// <seealso cref="UnityEngine.InputSystem.InputAction.performed" />
+        /// <seealso cref="UnityEngine.InputSystem.InputAction.canceled" />
+        void OnScopeUp(InputAction.CallbackContext context);
+        /// <summary>
+        /// Method invoked when associated input action "ScopeDown" is either <see cref="UnityEngine.InputSystem.InputAction.started" />, <see cref="UnityEngine.InputSystem.InputAction.performed" /> or <see cref="UnityEngine.InputSystem.InputAction.canceled" />.
+        /// </summary>
+        /// <seealso cref="UnityEngine.InputSystem.InputAction.started" />
+        /// <seealso cref="UnityEngine.InputSystem.InputAction.performed" />
+        /// <seealso cref="UnityEngine.InputSystem.InputAction.canceled" />
+        void OnScopeDown(InputAction.CallbackContext context);
+        /// <summary>
+        /// Method invoked when associated input action "ScrollAction" is either <see cref="UnityEngine.InputSystem.InputAction.started" />, <see cref="UnityEngine.InputSystem.InputAction.performed" /> or <see cref="UnityEngine.InputSystem.InputAction.canceled" />.
+        /// </summary>
+        /// <seealso cref="UnityEngine.InputSystem.InputAction.started" />
+        /// <seealso cref="UnityEngine.InputSystem.InputAction.performed" />
+        /// <seealso cref="UnityEngine.InputSystem.InputAction.canceled" />
+        void OnScrollAction(InputAction.CallbackContext context);
     }
     /// <summary>
     /// Interface to implement callback methods for all input action callbacks associated with input actions defined by "UI" which allows adding and removing callbacks.

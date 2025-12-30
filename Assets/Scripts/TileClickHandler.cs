@@ -4,33 +4,145 @@ using UnityEngine.InputSystem;
 public class TileClickHandler : MonoBehaviour
 {
     private InputSystem_Actions _inputSystem;
+    
+    [SerializeField] private float cameraScopeMultiplier;
+    [SerializeField] private int maxCameraSize;
+    [SerializeField] private int minCameraSize;
+
+    [SerializeField] private int cameraBoundX;
+    [SerializeField] private int cameraBoundY;
+    [SerializeField] private float cameraMoveThreshold;
+
+    [SerializeField] private float flagPlaceTime;
+    [SerializeField] private float currentFlagPlaceTime;
+    
+    private bool _primaryInputInProgress;
+    private bool _inputCanceledByTimer;
+    private Vector2 _primaryInputStartPos;
+    private Vector3 _cameraStartPos;
+    
+
+    private Camera _camera;
 
     private void Awake()
     {
         _inputSystem = new InputSystem_Actions();
+        _camera = Camera.main;
     }
     
     private void OnEnable()
     {
         _inputSystem.Enable();
-        _inputSystem.Player.PrimaryAction.performed += OnPrimaryInputPerformed;
+        _inputSystem.Player.PrimaryAction.started += OnPrimaryInputStarted;
+        _inputSystem.Player.PrimaryAction.canceled += OnPrimaryInputCanceled;
+        
+        _inputSystem.Player.ScrollAction.performed += OnScrollAction;
     }
-
+    
     private void OnDisable()
     {
         _inputSystem.Disable();      
-        _inputSystem.Player.PrimaryAction.performed -= OnPrimaryInputPerformed;
+        _inputSystem.Player.PrimaryAction.started -= OnPrimaryInputStarted;
+        _inputSystem.Player.PrimaryAction.canceled -= OnPrimaryInputCanceled;
+        
+        _inputSystem.Player.ScrollAction.performed -= OnScrollAction;
+    }
+    
+    private void OnPrimaryInputStarted(InputAction.CallbackContext context)
+    {
+        _primaryInputInProgress = true;
+        _inputCanceledByTimer = false;
+        
+        currentFlagPlaceTime = flagPlaceTime;
+        
+        _cameraStartPos = Camera.main.transform.position;
+        _primaryInputStartPos = Mouse.current.position.ReadValue();
+    }
+    
+    private void OnPrimaryInputCanceled(InputAction.CallbackContext context)
+    {
+        if (_inputCanceledByTimer) return;
+        
+        if (Vector3.Distance(_camera.transform.position, _cameraStartPos) <= cameraMoveThreshold)
+        {
+            OnPrimaryInputClick(false);
+        }
+        
+        _primaryInputInProgress = false;
+        _primaryInputStartPos = Vector2.zero;
+    }
+    
+    private void OnScrollAction(InputAction.CallbackContext context)
+    {
+        Vector2 value = context.ReadValue<Vector2>();
+        float yValue = value.y;
+        
+        if (Camera.main == null) return;
+
+        if (yValue < 0)
+        {
+            Camera.main.orthographicSize += cameraScopeMultiplier;
+        }
+        else if (yValue > 0)
+        {
+            Camera.main.orthographicSize -= cameraScopeMultiplier;
+        }
+        
+        Camera.main.orthographicSize = Mathf.Clamp(
+            Camera.main.orthographicSize, 
+            minCameraSize, 
+            maxCameraSize);
     }
 
-    private void OnPrimaryInputPerformed(InputAction.CallbackContext context)
+    private void CancelPrimaryInput()
+    {
+        _primaryInputInProgress = false;
+        _inputCanceledByTimer = true;
+        _primaryInputStartPos = Vector2.zero;
+    }
+    
+    private void Update()
+    {
+        if (!_primaryInputInProgress || _camera == null) return;
+        
+        currentFlagPlaceTime -= Time.deltaTime;
+        if (currentFlagPlaceTime <= 0 && Vector3.Distance(_camera.transform.position, _cameraStartPos) <= cameraMoveThreshold)
+        {
+            CancelPrimaryInput();
+            OnPrimaryInputClick(true);
+            return;
+        }
+        
+        Vector2 currentScreenPos = Mouse.current.position.ReadValue();
+
+        Vector2 delta = _primaryInputStartPos - currentScreenPos;
+        
+        float pixelsPerUnit =
+            Screen.height / (_camera.orthographicSize * 2f);
+
+        Vector3 worldDelta = new Vector3(
+            delta.x / pixelsPerUnit,
+            delta.y / pixelsPerUnit,
+            0f
+        );
+
+        _camera.transform.position = _cameraStartPos + worldDelta;
+        _camera.transform.position = new Vector3(
+                Mathf.Clamp(_camera.transform.position.x, -cameraBoundX, cameraBoundX),
+                Mathf.Clamp(_camera.transform.position.y, -cameraBoundY, cameraBoundY),
+                _camera.transform.position.z
+            );
+    }
+    
+    private void OnPrimaryInputClick(bool placeFlag)
     {
         Vector2 screenPos = Vector2.zero;
 
-        if (Touchscreen.current != null && Touchscreen.current.primaryTouch.press.isPressed)
+        if (Touchscreen.current != null)
         {
             screenPos = Touchscreen.current.primaryTouch.position.ReadValue();
         } 
-        else if (Mouse.current != null && Mouse.current.leftButton.isPressed)
+        else if (Mouse.current != null)
         {
             screenPos = Mouse.current.position.ReadValue();
         }
@@ -41,21 +153,25 @@ public class TileClickHandler : MonoBehaviour
             return;
         }
         
-        Vector3 worldPos = Camera.main.ScreenToWorldPoint(screenPos);
+        Vector3 worldPos = _camera.ScreenToWorldPoint(screenPos);
         
-        HandleClick(worldPos);
+        HandleClick(worldPos, placeFlag);
     }
     
-    private void HandleClick(Vector2 worldPos)
+    private void HandleClick(Vector2 worldPos, bool placeFlag)
     {
         RaycastHit2D hit = Physics2D.Raycast(worldPos, Vector2.zero);
 
         if (hit.collider != null)
         {
             TileScript tile = hit.collider.GetComponent<TileScript>();
-            if (tile != null)
+            if (tile != null && !placeFlag)
             {
                 tile.MouseLeftClick();
+            }
+            else if (tile != null && placeFlag)
+            {
+                tile.MouseRightClick();
             }
         }
     }

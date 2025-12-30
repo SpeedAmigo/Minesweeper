@@ -39,15 +39,19 @@ public class TileScript : MonoBehaviour
     {
         if (active)
         {
-            flagged = !flagged;
-
-            if (flagged)
+            if (!flagged && MinesweeperManager.Instance.MinesCount > 0)
             {
+                flagged = true;
                 _spriteRenderer.sprite = flaggedTile;
+                MinesweeperManager.Instance.MinesCount--;
+                MinesweeperManager.Instance.AddFlaggedTileToList(new Vector2Int((int)transform.position.x, (int)transform.position.y));
             }
-            else
+            else if (flagged)
             {
+                flagged = false;
                 _spriteRenderer.sprite = unclickedTile;
+                MinesweeperManager.Instance.MinesCount++;
+                MinesweeperManager.Instance.RemoveFlaggedTileFromList(new Vector2Int((int)transform.position.x, (int)transform.position.y));
             }
         }
     }
@@ -76,12 +80,20 @@ public class TileScript : MonoBehaviour
         }
     }
 
-    private void UncoverTile()
+    private void UncoverTile(bool gameWon)
     {
         if (!active) return;
+
+        if (gameWon)
+        {
+            _spriteRenderer.sprite = isMine ? flaggedTile : clickedTiles[mineCount];
+        }
+        else
+        {
+            _spriteRenderer.sprite = isMine ? mineTile : clickedTiles[mineCount];
+        }
         
         active = false;
-        _spriteRenderer.sprite = isMine ? mineTile : clickedTiles[mineCount];
     }
 
     private void ResetTile()

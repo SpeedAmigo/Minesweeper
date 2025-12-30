@@ -10,7 +10,7 @@ public class MinesweeperManager : MonoBehaviour
     
     public static event Action OnRestartEvent;
     public static event Action<int> OnBombCountEvent;
-    public static event Action OnTileUncoverEvent;
+    public static event Action<bool> OnTileUncoverEvent;
     public static event Action OnGameWonEvent;
     
     [Header("Dependencies")]
@@ -26,10 +26,23 @@ public class MinesweeperManager : MonoBehaviour
     private Timer timer;
     
     private List<TileScript> _tilesList = new();
+    private HashSet<Vector2Int> _flaggedTiles = new();
     private readonly List<TileScript> _minesList = new();
     private readonly HashSet<TileScript> _visitedTiles = new();
     private Dictionary<Vector2Int, TileScript> _tileDictionary = new();
     private BoardSize _boardSize;
+    private int _minesCount;
+
+    public int MinesCount
+    {
+        get => _minesCount;
+        set
+        {
+            if (_minesCount == value) return;
+            _minesCount = value;
+            OnBombCountEvent?.Invoke(_minesCount);
+        }
+    }
     
     #region Helpers
     private BoardSize GetBoardSize(MinesweeperSize size)
@@ -78,10 +91,11 @@ public class MinesweeperManager : MonoBehaviour
             foreach (var dir in shuffledDirs)
             {
                 Vector2Int next = current + dir;
-
+                
+                if (_flaggedTiles.Contains(next)) continue;
                 if (!_tileDictionary.ContainsKey(next)) continue;
                 if (safeArea.Contains(next)) continue;
-
+                
                 safeArea.Add(next);
                 queue.Enqueue(next);
 
@@ -134,6 +148,8 @@ public class MinesweeperManager : MonoBehaviour
         
         foreach (var pos in safeArea)
         {
+            if (_flaggedTiles.Contains(pos)) continue;
+            
             if (_tileDictionary[pos].mineCount == 0)
                 DeactivateEmpty(pos);
         }
@@ -160,7 +176,8 @@ public class MinesweeperManager : MonoBehaviour
             }
         }
         
-        OnBombCountEvent?.Invoke(_boardSize.mines);
+        _minesCount = _boardSize.mines;
+        OnBombCountEvent?.Invoke(_minesCount);
     }
     
     public void GameRestart()
@@ -169,14 +186,18 @@ public class MinesweeperManager : MonoBehaviour
         
         isStarted = false;
         _visitedTiles.Clear();
+        _flaggedTiles.Clear();
         timer.ResetTimer();
         timer.StopTimer();
+        
+        _minesCount = _boardSize.mines;
+        OnBombCountEvent?.Invoke(_minesCount);
     }
 
     public void GameOver()
     {
         timer.StopTimer();
-        OnTileUncoverEvent?.Invoke();   
+        OnTileUncoverEvent?.Invoke(false);   
     }
 
     [ContextMenu("Win Game")]
@@ -189,8 +210,10 @@ public class MinesweeperManager : MonoBehaviour
         
         StatisticManager.Instance.UpdateDayStreak();
         StatisticManager.Instance.SetQuickestTime(trimmedTime);
+        StatisticManager.Instance.SetCurrentTime(timer.GetElapsedTime());
         
         OnGameWonEvent?.Invoke();
+        OnTileUncoverEvent?.Invoke(true);
     }
     
     private void PlaceMines(int mineCount, HashSet<Vector2Int> safeArea)
@@ -243,6 +266,9 @@ public class MinesweeperManager : MonoBehaviour
         if (_visitedTiles.Contains(_tileDictionary[gridPosition])) return;
         
         TileScript currentTile = _tileDictionary[gridPosition];
+        
+        if (currentTile.flagged) return;
+        
         _visitedTiles.Add(currentTile);
         
         currentTile._spriteRenderer.sprite = currentTile.clickedTiles[currentTile.mineCount];
@@ -254,6 +280,8 @@ public class MinesweeperManager : MonoBehaviour
 
             if (_tileDictionary.TryGetValue(neighborPos, out TileScript neighborScript))
             {
+                if (neighborScript.flagged) continue;
+                
                 if (neighborScript.mineCount == 0 && !_visitedTiles.Contains(neighborScript))
                 {
                     DeactivateEmpty(neighborPos);
@@ -275,6 +303,16 @@ public class MinesweeperManager : MonoBehaviour
         {
             GameWon();
         }
+    }
+
+    public void AddFlaggedTileToList(Vector2Int tileScript)
+    {
+        _flaggedTiles.Add(tileScript);
+    }
+
+    public void RemoveFlaggedTileFromList(Vector2Int tileScript)
+    {
+        _flaggedTiles.Remove(tileScript);
     }
 }
 

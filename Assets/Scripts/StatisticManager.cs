@@ -6,6 +6,7 @@ public class StatisticManager : MonoBehaviour
 {
     public static StatisticManager Instance;
     
+    [SerializeField] private float currentTime;
     [SerializeField] private float quickestTime;
     [SerializeField] private int dayStreak;
     [SerializeField] private string lastDateString;
@@ -80,10 +81,20 @@ public class StatisticManager : MonoBehaviour
         PlayerPrefs.SetFloat("QuickestTime", quickestTime);
         PlayerPrefs.Save();
     }
+
+    public void SetCurrentTime(float time)
+    {
+        currentTime = time;
+    }
     
     public float GetQuickestTime()
     {
         return quickestTime;
+    }
+
+    public float GetCurrentTime()
+    {
+        return currentTime;
     }
 
     [ContextMenu("ResetSaves")]
