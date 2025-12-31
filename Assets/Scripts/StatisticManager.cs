@@ -25,6 +25,7 @@ public class StatisticManager : MonoBehaviour
             Destroy(gameObject);
         }
         
+        // XD
         Application.targetFrameRate = 60;
     }
 

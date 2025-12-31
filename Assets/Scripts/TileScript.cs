@@ -12,6 +12,8 @@ public class TileScript : MonoBehaviour
     
     public SpriteRenderer _spriteRenderer;
     
+    private AudioSource _audioSource;
+    
     private bool _clicked;
     
     public bool flagged = false;
@@ -39,6 +41,8 @@ public class TileScript : MonoBehaviour
     {
         if (active)
         {
+            _audioSource.Play();
+            
             if (!flagged && MinesweeperManager.Instance.MinesCount > 0)
             {
                 flagged = true;
@@ -107,6 +111,7 @@ public class TileScript : MonoBehaviour
     
     private void Awake()
     {
+        _audioSource = GetComponent<AudioSource>();
         _spriteRenderer = GetComponent<SpriteRenderer>();
         _spriteRenderer.sprite = unclickedTile;
     }
