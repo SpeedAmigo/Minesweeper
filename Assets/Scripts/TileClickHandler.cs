@@ -21,7 +21,6 @@ public class TileClickHandler : MonoBehaviour
     private Vector2 _primaryInputStartPos;
     private Vector3 _cameraStartPos;
     
-
     private Camera _camera;
 
     private void Awake()
@@ -50,17 +49,30 @@ public class TileClickHandler : MonoBehaviour
     
     private void OnPrimaryInputStarted(InputAction.CallbackContext context)
     {
+        Debug.Log("Primary Input Started");
+        
         _primaryInputInProgress = true;
         _inputCanceledByTimer = false;
         
         currentFlagPlaceTime = flagPlaceTime;
         
-        _cameraStartPos = Camera.main.transform.position;
-        _primaryInputStartPos = Mouse.current.position.ReadValue();
+        _cameraStartPos = _camera.transform.position;
+        
+        
+        if (Touchscreen.current != null)
+        {
+            _primaryInputStartPos = Touchscreen.current.primaryTouch.position.ReadValue();
+        }
+        else if (Mouse.current != null)
+        {
+            _primaryInputStartPos = Mouse.current.position.ReadValue();
+        }
     }
     
     private void OnPrimaryInputCanceled(InputAction.CallbackContext context)
     {
+        Debug.Log("Primary Input Canceled");
+        
         if (_inputCanceledByTimer) return;
         
         if (Vector3.Distance(_camera.transform.position, _cameraStartPos) <= cameraMoveThreshold)
@@ -77,19 +89,19 @@ public class TileClickHandler : MonoBehaviour
         Vector2 value = context.ReadValue<Vector2>();
         float yValue = value.y;
         
-        if (Camera.main == null) return;
+        if (_camera == null) return;
 
         if (yValue < 0)
         {
-            Camera.main.orthographicSize += cameraScopeMultiplier;
+            _camera.orthographicSize += cameraScopeMultiplier;
         }
         else if (yValue > 0)
         {
-            Camera.main.orthographicSize -= cameraScopeMultiplier;
+            _camera.orthographicSize -= cameraScopeMultiplier;
         }
         
-        Camera.main.orthographicSize = Mathf.Clamp(
-            Camera.main.orthographicSize, 
+        _camera.orthographicSize = Mathf.Clamp(
+            _camera.orthographicSize, 
             minCameraSize, 
             maxCameraSize);
     }
@@ -112,9 +124,18 @@ public class TileClickHandler : MonoBehaviour
             OnPrimaryInputClick(true);
             return;
         }
-        
-        Vector2 currentScreenPos = Mouse.current.position.ReadValue();
 
+        Vector2 currentScreenPos = Vector2.zero;
+        
+        if (Touchscreen.current != null)
+        {
+            currentScreenPos = Touchscreen.current.primaryTouch.position.ReadValue();
+        }
+        else if (Mouse.current != null)
+        {
+            currentScreenPos = Mouse.current.position.ReadValue();
+        }
+        
         Vector2 delta = _primaryInputStartPos - currentScreenPos;
         
         float pixelsPerUnit =
@@ -147,7 +168,7 @@ public class TileClickHandler : MonoBehaviour
             screenPos = Mouse.current.position.ReadValue();
         }
 
-        if (Camera.main == null)
+        if (_camera == null)
         {
             Debug.LogError("No Camera main found");
             return;

@@ -187,6 +187,7 @@ public class MinesweeperManager : MonoBehaviour
         isStarted = false;
         _visitedTiles.Clear();
         _flaggedTiles.Clear();
+        _minesList.Clear();
         timer.ResetTimer();
         timer.StopTimer();
         
@@ -218,6 +219,8 @@ public class MinesweeperManager : MonoBehaviour
     
     private void PlaceMines(int mineCount, HashSet<Vector2Int> safeArea)
     {
+        _minesList.Clear();
+        
         List<Vector2Int> availablePositions = new List<Vector2Int>(_tileDictionary.Keys);
         
         foreach (var pos in safeArea)
