@@ -14,12 +14,25 @@ public class GameWonScript : MonoBehaviour
     {
         gameWonPanel.SetActive(true);
 
-        bestTimeText.text = FormatTime(StatisticManager.Instance.GetQuickestTime());
-        currentTimeText.text = FormatTime(StatisticManager.Instance.GetCurrentTime());
+        bestTimeText.text = HelperMethods.FormatTime(StatisticManager.Instance.GetQuickestTime());
+        currentTimeText.text = HelperMethods.FormatTime(StatisticManager.Instance.GetCurrentTime());
         currentStreakText.text = StatisticManager.Instance.GetDayStreak().ToString();
     }
     
-    private string FormatTime(float timeSeconds, bool threeDigitMilliseconds = true)
+    private void OnEnable()
+    {
+        MinesweeperManager.OnGameWonEvent += EnableGameWonPanel;
+    }
+
+    private void OnDisable()
+    {
+        MinesweeperManager.OnGameWonEvent -= EnableGameWonPanel;
+    }
+}
+
+public static class HelperMethods
+{
+    public static string FormatTime(float timeSeconds, bool threeDigitMilliseconds = true)
     {
         int minutes = Mathf.FloorToInt(timeSeconds / 60f);
         int seconds = Mathf.FloorToInt(timeSeconds % 60f);
@@ -32,15 +45,5 @@ public class GameWonScript : MonoBehaviour
             int centiseconds = Mathf.FloorToInt(milliseconds / 10f); // 0-99
             return string.Format("{0:00}:{1:00}:{2:00}", minutes, seconds, centiseconds);
         }
-    }
-    
-    private void OnEnable()
-    {
-        MinesweeperManager.OnGameWonEvent += EnableGameWonPanel;
-    }
-
-    private void OnDisable()
-    {
-        MinesweeperManager.OnGameWonEvent -= EnableGameWonPanel;
     }
 }

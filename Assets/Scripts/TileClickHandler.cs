@@ -1,5 +1,6 @@
 using UnityEngine;
 using UnityEngine.InputSystem;
+using UnityEngine.InputSystem.EnhancedTouch;
 
 public class TileClickHandler : MonoBehaviour
 {
@@ -15,11 +16,14 @@ public class TileClickHandler : MonoBehaviour
 
     [SerializeField] private float flagPlaceTime;
     [SerializeField] private float currentFlagPlaceTime;
+
+    [SerializeField] private float pinchSensitivity = 0.01f;
     
     private bool _primaryInputInProgress;
     private bool _inputCanceledByTimer;
     private Vector2 _primaryInputStartPos;
     private Vector3 _cameraStartPos;
+    private float _lastPinchDistance;
     
     private Camera _camera;
 
@@ -31,6 +35,8 @@ public class TileClickHandler : MonoBehaviour
     
     private void OnEnable()
     {
+        EnhancedTouchSupport.Enable();
+        
         _inputSystem.Enable();
         _inputSystem.Player.PrimaryAction.started += OnPrimaryInputStarted;
         _inputSystem.Player.PrimaryAction.canceled += OnPrimaryInputCanceled;
@@ -40,6 +46,8 @@ public class TileClickHandler : MonoBehaviour
     
     private void OnDisable()
     {
+        EnhancedTouchSupport.Disable();
+        
         _inputSystem.Disable();      
         _inputSystem.Player.PrimaryAction.started -= OnPrimaryInputStarted;
         _inputSystem.Player.PrimaryAction.canceled -= OnPrimaryInputCanceled;
@@ -105,6 +113,39 @@ public class TileClickHandler : MonoBehaviour
             minCameraSize, 
             maxCameraSize);
     }
+    
+    private void HandlePinchZoomMobile()
+    {
+        if (_camera == null) return;
+
+        var touches = UnityEngine.InputSystem.EnhancedTouch.Touch.activeTouches;
+        if (touches.Count < 2)
+        {
+            _lastPinchDistance = 0f;
+            return;
+        }
+
+        // Use the first two touches
+        var t0 = touches[0].screenPosition;
+        var t1 = touches[1].screenPosition;
+
+        float currentDistance = Vector2.Distance(t0, t1);
+
+        if (_lastPinchDistance <= 0f)
+        {
+            _lastPinchDistance = currentDistance;
+            return;
+        }
+
+        float pinchDelta = currentDistance - _lastPinchDistance; // >0 fingers moving apart, <0 moving together
+        _lastPinchDistance = currentDistance;
+
+        // Convert pixel delta to orthographic size change
+        float deltaSize = -pinchDelta * pinchSensitivity; // invert so pinch-out zooms in
+        _camera.orthographicSize += deltaSize;
+
+        _camera.orthographicSize = Mathf.Clamp(_camera.orthographicSize, minCameraSize, maxCameraSize);
+    }
 
     private void CancelPrimaryInput()
     {
@@ -115,6 +156,8 @@ public class TileClickHandler : MonoBehaviour
     
     private void Update()
     {
+        HandlePinchZoomMobile();
+        
         if (!_primaryInputInProgress || _camera == null) return;
         
         currentFlagPlaceTime -= Time.deltaTime;
