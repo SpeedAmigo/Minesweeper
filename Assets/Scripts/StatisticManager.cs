@@ -34,11 +34,11 @@ public class StatisticManager : MonoBehaviour
         dayStreak = PlayerPrefs.GetInt("DayStreak", 1);
         quickestTime = PlayerPrefs.GetFloat("QuickestTime", float.MaxValue);
         
-        lastDateString = PlayerPrefs.GetString("LastDate", String.Empty);
+        lastDateString = PlayerPrefs.GetString("LastDate", "");
         
         if (!string.IsNullOrEmpty(lastDateString))
         {
-            lastDate = DateTime.Parse(lastDateString);
+            lastDate = DateTime.ParseExact(lastDateString, "yyyy-MM-dd", System.Globalization.CultureInfo.InvariantCulture);
         }
         else
         {
@@ -48,14 +48,14 @@ public class StatisticManager : MonoBehaviour
     
     public void UpdateDayStreak()
     {
-        var currentDay = DateTime.Now.Date;
-        var difference = currentDay - lastDate;
+        var today = DateTime.Now.Date;
+        int dayDifference = (today - lastDate).Days;
 
-        if (difference.Days == 1)
+        if (dayDifference == 1)
         {
             SetDayStreak(dayStreak + 1);
         }
-        else if (difference.Days > 1)
+        else if (dayDifference > 1)
         {
             SetDayStreak(1);
         }
@@ -66,8 +66,10 @@ public class StatisticManager : MonoBehaviour
         if (streak < 0) return;
         
         dayStreak = streak;
-        PlayerPrefs.SetInt("DayStreak", streak);
-        PlayerPrefs.SetString("LastDate", lastDateString = DateTime.Now.Date.ToShortDateString());
+        lastDate = DateTime.Now.Date;
+        
+        PlayerPrefs.SetInt("DayStreak", dayStreak);
+        PlayerPrefs.SetString("LastDate", lastDate.ToString("yyyy-MM-dd"));
         PlayerPrefs.Save();
     }
 
